@@ -1,10 +1,10 @@
 from keras.engine.topology import Layer
 from keras import regularizers, constraints, initializers
 from keras import backend as K
+
+
 class Attention(Layer):
-    """
-    Credit: Tobias
-    """
+    """Credit: Tobias Schmidt and Mathias Wilhelm."""
 
     def __init__(
         self,

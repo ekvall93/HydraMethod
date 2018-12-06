@@ -1,7 +1,12 @@
 import keras
+
+
 class BatchNormalization(keras.layers.BatchNormalization):
     """
-    Identical to keras.layers.BatchNormalization, but adds the option to freeze parameters.
+    Credit: Allen Goodman
+    https://github.com/broadinstitute/keras-resnet
+    Identical to keras.layers.BatchNormalization, but adds the option
+    to freeze parameters.
     """
     def __init__(self, freeze, *args, **kwargs):
         self.freeze = freeze

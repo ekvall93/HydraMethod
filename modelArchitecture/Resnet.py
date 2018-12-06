@@ -1,35 +1,41 @@
-from keras.layers import ZeroPadding1D, Conv1D, Activation, MaxPooling1D,Add
+"""Markus Ekvall: 2018-12-05."""
+from keras.layers import ZeroPadding1D, Conv1D, Activation, MaxPooling1D, Add
 from .BatchNormalization import BatchNormalization
 
+
 class Resnet():
-    def __init__(self, blocks, features,
-                 kernel_size=3, freeze_bn=False,*args, **kwargs):
+    """Resnet Architecture
+    Credit: Allen Goodman
+    https://github.com/broadinstitute/keras-resnet
+    """
+    def __init__(self, blocks, features, kernel_size=3, freeze_bn=False,
+                 *args, **kwargs):
+        """
+        :param blocks: Number of ResNet blocks.
+        :param features: Features/Filters
+        :param kernel_size: kernel/window
+        :param freeze_bn: Freeze the BatchNormalization
+        :returns: ResNet Architecture.
+        """
         self.blocks = blocks
         self.features = features
         self.freeze_bn = freeze_bn
         self.kernel_size = kernel_size
-        super(Resnet, self).__init__(*args, **kwargs)
 
-        # set to non-trainable if freeze is true
-
-
-    def basic_1d(self, filters, stage=0, block=0, stride=None, numerical_name=False):
+    def resnet_block(self, filters, stage=0, block=0, stride=None,
+                     numerical_name=False):
         """
         A one-dimensional basic block.
-        :param filters: the output’s feature space
-        :param stage: int representing the stage of this block (starting from 0)
-        :param block: int representing this block (starting from 0)
-        :param kernel_size: size of the kernel
-        :param numerical_name: if true, uses numbers to represent blocks instead of chars (ResNet{101, 152, 200})
-        :param stride: int representing the stride used in the shortcut and the first conv layer, default derives stride from block id
-        :param freeze_bn: if true, freezes BatchNormalization layers (ie. no updates are done in these layers)
-        Usage:
-            >>> import keras_resnet.blocks
-            >>> keras_resnet.blocks.basic_1d(64)
+
+        :param filters: the output’s feature space.
+        :param stage: int representing the stage of this block.
+        :param block: int representing this block.
+        :param numerical_name: Numbers to represent blocks.
+        :param stride: Sride used in the shortcut and the first conv layer.
         """
 
         parameters = {
-        "kernel_initializer": "he_normal"
+            "kernel_initializer": "he_normal"
         }
 
         if stride is None:
@@ -46,21 +52,27 @@ class Resnet():
         stage_char = str(stage + 2)
 
         def f(x):
+            """
+            ResNet block
+
+            :param x: Acitvaitions.
+            :returns: ResnetBlock activations.
+            """
             y = ZeroPadding1D(padding=1)(x)
-            y = Conv1D(filters, self.kernel_size,
-                                    strides=stride, use_bias=False,
-                                    **parameters)(y)
-            y = BatchNormalization(axis=1, epsilon=1e-5, freeze=self.freeze_bn)(y)
+            y = Conv1D(filters, self.kernel_size, strides=stride,
+                       use_bias=False, **parameters)(y)
+            y = BatchNormalization(axis=1, epsilon=1e-5,
+                                   freeze=self.freeze_bn)(y)
             y = Activation("elu")(y)
 
             y = ZeroPadding1D(padding=1)(y)
             y = Conv1D(filters, self.kernel_size, use_bias=False,
-                                    **parameters)(y)
+                       **parameters)(y)
             y = BatchNormalization(axis=1, epsilon=1e-5,
                                    freeze=self.freeze_bn)(y)
             if block == 0:
-                shortcut = Conv1D(filters, 1, strides=stride,
-                                               use_bias=False, **parameters)(x)
+                shortcut = Conv1D(filters, 1, strides=stride, use_bias=False,
+                                  **parameters)(x)
                 shortcut = BatchNormalization(axis=1, epsilon=1e-5,
                                               freeze=self.freeze_bn)(shortcut)
             else:
@@ -68,32 +80,36 @@ class Resnet():
 
             y = Add()([y, shortcut])
             y = Activation("elu")(y)
-
             return y
-
         return f
 
     def resnet(self, x, init_maxpool=False):
+        """
+        Get ResNet.
+
+        :param x: Input.
+        :param init_maxpool: Maxpool or Conv downsample.
+        :returns: ResNet Architecture.
+        """
 
         x = ZeroPadding1D(padding=3)(x)
-        x = Conv1D(64, 7, strides=2, use_bias=False )(x)
+        x = Conv1D(64, 7, strides=2, use_bias=False)(x)
         x = BatchNormalization(axis=1, epsilon=1e-5, freeze=self.freeze_bn)(x)
         x = Activation("elu")(x)
 
         if init_maxpool:
             x = MaxPooling1D(3, strides=2, padding="same")(x)
         else:
-            x = Conv1D(64, 3, strides=2, use_bias=False )(x)
-            x = BatchNormalization(axis=1, epsilon=1e-5, freeze=self.freeze_bn)(x)
+            x = Conv1D(64, 3, strides=2, use_bias=False)(x)
+            x = BatchNormalization(axis=1, epsilon=1e-5,
+                                   freeze=self.freeze_bn)(x)
             x = Activation("elu")(x)
-
-
-
         for stage_id, iterations in enumerate(self.blocks):
             for block_id in range(iterations):
-                x = self.basic_1d(self.features, stage_id, block_id,
-                             numerical_name=(block_id > 0 and
-                                             numerical_names[stage_id]))(x)
+                x = self.resnet_block(
+                    self.features, stage_id, block_id,
+                    numerical_name=(block_id > 0 and numerical_names[stage_id])
+                    )(x)
             self.features *= 2
 
         return x
