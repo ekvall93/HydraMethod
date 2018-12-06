@@ -1,26 +1,29 @@
 import pandas as pd
 import numpy as np
+from  sklearn.model_selection import train_test_split
+from sklearn import preprocessing
 
 
 class split_data():
-    def __init__(self, in_path, out_path, prepare_csv=False,test_split =0.0,
-                 train_size=1.0, *args, **kwargs):
+    def __init__(self, in_path, out_path, prepare_csv=False,test_size  =0.0,
+                 train_size=1.0,random_state=42):
         is_valid_file(in_path)
-        assert test_split + train_size <= 1.0,"The combined splits can not exceed 100%"
+        assert test_size + train_size <= 1.0,"The combined splits can not exceed 100%"
         self.in_path = in_path
         self.out_path = out_path
-        super(split_data, self).__init__(*args, **kwargs)
+        self.test_size = test_size
+        self.train_size = train_size
+        self.random_state = random_state
 
     def get_ix(self,n):
         ix = np.arange(n);np.random.shuffle(ix)
         return ix
 
-    def split_ix(self, X, idx, test_split=0.1, train=True):
-        n = int(len(idx)*test_split)
-        if train:
-            return X[idx[n:]].tolist()
-        else:
-            return X[idx[:n]].tolist()
+    def split_ix(self, X, idx, train=True):
+        train_ix, test_ix = train_test_split(idx, test_size=self.test_size,
+                                             train_size=self.train_size,
+                                             random_state=self.random_state)
+        return  X[train_ix].tolist(),  X[test_ix].tolist()
 
     def get_datasets(self, X, idx):
         return X.copy()[X['mod_sequence'].isin(idx)]
@@ -39,8 +42,7 @@ class split_data():
 
         ix = self.get_ix(len(unique_seq))
 
-        train_ix = self.split_ix(unique_seq, ix)
-        test_ix= self.split_ix(unique_seq, ix, train=False)
+        train_ix,test_ix =  self.split_ix(unique_seq, ix)
 
         train_set = self.get_datasets(new_df, train_ix)
         test_set = self.get_datasets(new_df, test_ix)
@@ -339,3 +341,15 @@ def get_fullpath_basename(file_path: str):
     base_name_without_extension = os.path.splitext(base_name)[0]
 
     return(dirName, base_name_without_extension, fullPath)
+
+def save_model(model, path, name):
+    model_yaml = model.to_yaml()
+    with open(path+name+".yaml", "w") as yaml_file:
+        yaml_file.write(model_yaml)
+        # serialize weights to HDF5
+    model.save_weights(path+name+".yaml"".h5")
+    print("Saved model to disk")
+
+def standardize(y_tr, y_te):
+    std_scale = preprocessing.StandardScaler().fit(y_tr)
+    return std_scale.transform(y_tr), std_scale.transform(y_te)
