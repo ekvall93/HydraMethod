@@ -15,7 +15,6 @@ class Resnet():
         :param features: Features/Filters
         :param kernel_size: kernel/window
         :param freeze_bn: Freeze the BatchNormalization
-        :returns: ResNet Architecture.
         """
         self.blocks = blocks
         self.features = features
@@ -32,6 +31,8 @@ class Resnet():
         :param block: int representing this block.
         :param numerical_name: Numbers to represent blocks.
         :param stride: Sride used in the shortcut and the first conv layer.
+
+        :returns: Resnet block.
         """
 
         parameters = {

@@ -1,3 +1,4 @@
+"""Markus Ekvall: 2018-12-05."""
 from modelArchitecture.ResnetRnnDense import ResnetRnnDense
 
 from keras.models import model_from_yaml
