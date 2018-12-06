@@ -1,3 +1,4 @@
+mkdir data
 curl -L -O https://syncandshare.lrz.de/dl/fiUSUtHxQ9ijy2p5RxND1dAs
 unzip fiUSUtHxQ9ijy2p5RxND1dAs
 rm fiUSUtHxQ9ijy2p5RxND1dAs
