@@ -9,7 +9,7 @@ from keras.preprocessing.sequence import pad_sequences
 class HydraMethod():
     """Hydra method for 1 dimensional data."""
 
-    def __init__(self, architecture, nr_heads):
+    def __init__(self, architecture, nr_heads, new_architecture=True):
         """
         :param architecture: Architecture to predict 1D sequences.
         :param nr_heads: Number of heads applied to architecture.
@@ -17,10 +17,11 @@ class HydraMethod():
         """
         self.architecture = architecture
         self.nr_heads = nr_heads
+        self.new_architecture = new_architecture
 
-    def compile_model(self, nr_heads):
+    def get_architecture(self, nr_heads):
         """
-        Complile architecture with the Hydra method.
+        Get architecture with the Hydra method.
 
         :param nr_heads: Number of heads applied to architecture.
         :returns: Compiled model.
@@ -94,7 +95,7 @@ class HydraMethod():
         """
         return self.reverse_sequences(x)
 
-    def get_all_representation(self, x, nr_heads):
+    def get_all_representation(self, x):
         """
         Get all different types of sequence representation.
 
@@ -103,12 +104,38 @@ class HydraMethod():
         :returns: Severeal representations of sequence.
         """
         X = list()
-        for h in range(nr_heads):
+        for h in range(self.nr_heads):
             X += [self.get_representation(h, x)]
         return X
 
-    def fit(self, x_train, y_train, x_test, y_test, epochs=3, batch_size=64,
-            optimizer=Adam, loss=mean_absolute_error, learning_rate=1e-4):
+
+    def compile(self, optimizer=Adam, loss=mean_absolute_error,
+                learning_rate=1e-4):
+        """
+        Compile model.
+
+        :param optimizer: Optimzer.
+        :param loss: Optimization function.
+        :param learning_rate: learning_rate.
+        :returns: Severeal representations of sequence.
+        """
+        if self.new_architecture:
+            self.model = self.get_architecture(self.nr_heads)
+            self.new_architecture = False
+        self.model.compile(loss=loss, optimizer=optimizer(learning_rate))
+
+    def get_model(self):
+        """
+        Compile model.
+
+        :param weight_name: Name for weight name file.
+        :returns: Severeal representations of sequence.
+        """
+        return self.model
+
+
+
+    def fit(self, x_train, y_train, x_test, y_test, epochs=3, batch_size=64):
         """
         Fit model with the Hydra method.
 
@@ -118,11 +145,8 @@ class HydraMethod():
         :param y_test: Training test data.
         :returns: trained model
         """
-        X_train = self.get_all_representation(x_train, self.nr_heads)
-        X_test = self.get_all_representation(x_test, self.nr_heads)
-
-        model = self.compile_model(self.nr_heads)
-        model.compile(loss=loss, optimizer=optimizer(learning_rate))
-        model.fit(X_train, y_train, validation_data=(
+        X_train = self.get_all_representation(x_train)
+        X_test = self.get_all_representation(x_test)
+        self.model.fit(X_train, y_train, validation_data=(
                         X_test, y_test), epochs=epochs, batch_size=batch_size)
-        return model
+        return self.model
