@@ -1,7 +1,7 @@
 # HydraMethod
 The Hydra method for retention time prediction for peptides.
 
-<div style="text-align:center"><img src="./figures/hydra.jpg" width="200" height="200"/></div>
+<p align="center"><img src="./figures/hydra.jpg" width="300" height="300"/></p>
 
 
 ![alt text](./figures/hydra.jpg)
