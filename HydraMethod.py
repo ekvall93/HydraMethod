@@ -39,7 +39,7 @@ class HydraMethod():
             x_c = concatenate(X, axis=1)
             y = Dense(1)(x_c)
         else:
-            y = Dense(1)(X[h])
+            y = X[h]
         return Model(inputs=X_input, outputs=y)
 
     def reverse_sequences(self, x):
@@ -108,7 +108,6 @@ class HydraMethod():
             X += [self.get_representation(h, x)]
         return X
 
-
     def compile(self, optimizer=Adam, loss=mean_absolute_error,
                 learning_rate=1e-4):
         """
@@ -132,8 +131,6 @@ class HydraMethod():
         :returns: Severeal representations of sequence.
         """
         return self.model
-
-
 
     def fit(self, x_train, y_train, x_test, y_test, epochs=3, batch_size=64):
         """
