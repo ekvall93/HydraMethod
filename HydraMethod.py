@@ -107,7 +107,8 @@ class HydraMethod():
             X += [self.get_representation(h, x)]
         return X
 
-    def fit(self, x_train, y_train, x_test, y_test):
+    def fit(self, x_train, y_train, x_test, y_test, epochs=3, batch_size=64,
+            optimizer=Adam, loss=mean_absolute_error, learning_rate=1e-4):
         """
         Fit model with the Hydra method.
 
@@ -121,8 +122,7 @@ class HydraMethod():
         X_test = self.get_all_representation(x_test, self.nr_heads)
 
         model = self.compile_model(self.nr_heads)
-        model.compile(loss=mean_absolute_error,
-                      optimizer=Adam(1e-4))
+        model.compile(loss=loss, optimizer=optimizer(learning_rate))
         model.fit(X_train, y_train, validation_data=(
-                        X_test, y_test), epochs=3, batch_size=64)
+                        X_test, y_test), epochs=epochs, batch_size=batch_size)
         return model

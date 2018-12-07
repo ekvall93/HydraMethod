@@ -4,6 +4,48 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 import os
+from keras.callbacks import Callback
+
+
+def check_valid(file):
+    """
+    Check if file exist.
+
+    :param file: File path.
+    :returns: error or filepath.
+    """
+    if not os.path.exists(file):
+        error("The file %s does not exist!" % file)
+    else:
+        return(file)
+
+
+def save_model(model, path, name):
+    """
+    Save model to yaml.
+
+    :param model: model.
+    :param path: save model path.
+    :param name: save model as "name".
+    """
+    model_yaml = model.to_yaml()
+    with open(path+name+".yaml", "w") as yaml_file:
+        yaml_file.write(model_yaml)
+        # serialize weights to HDF5
+    model.save_weights(path+name+".yaml"".h5")
+    print("Saved model to disk")
+
+
+def standardize(y_tr, y_te):
+    """
+    Standardize labels.
+
+    :param y_tr: Train labels.
+    :param y_te: Test labels.
+    :returns: Standardized labels.
+    """
+    std_scale = preprocessing.StandardScaler().fit(y_tr)
+    return std_scale.transform(y_tr), std_scale.transform(y_te)
 
 
 def t95_metric(y_true, y_pred):
@@ -39,9 +81,9 @@ class split_data():
 
         :returns: Train and test sets.
         """
-        is_valid_file(in_path)
-        assert test_size + train_size <= 1.0,
-        "The combined splits can not exceed 100%"
+        check_valid(in_path)
+        assert(test_size + train_size <= 1.0,
+               "The combined splits can not exceed 100%")
         self.in_path = in_path
         self.out_path = out_path
         self.test_size = test_size
@@ -188,8 +230,8 @@ class data_split():
 
         :returns: Train, validation and test sets.
         """
-        assert validation_split + test_split + train_size <= 1.0,
-        "The combined splits can not exceed 100%"
+        assert(validation_split + test_split + train_size <= 1.0,
+               "The combined splits can not exceed 100%")
         self.validation_split = validation_split
         self.test_split = test_split
         if test_split is not None:
@@ -316,44 +358,3 @@ class TestCallback(Callback):
         t = np.sort(np.abs(error.flatten()))[sample_95]
         t95 = 2 * t / (max(y_true) - min(y_true)) * 100
         return t95
-
-
-def check_valid(file):
-    """
-    Check if file exist.
-
-    :param file: File path.
-    :returns: error or filepath.
-    """
-    if not os.path.exists(file):
-        error("The file %s does not exist!" % file)
-    else:
-        return(file)
-
-
-def save_model(model, path, name):
-    """
-    Save model to yaml.
-
-    :param model: model.
-    :param path: save model path.
-    :param name: save model as "name".
-    """
-    model_yaml = model.to_yaml()
-    with open(path+name+".yaml", "w") as yaml_file:
-        yaml_file.write(model_yaml)
-        # serialize weights to HDF5
-    model.save_weights(path+name+".yaml"".h5")
-    print("Saved model to disk")
-
-
-def standardize(y_tr, y_te):
-    """
-    Standardize labels.
-
-    :param y_tr: Train labels.
-    :param y_te: Test labels.
-    :returns: Standardized labels.
-    """
-    std_scale = preprocessing.StandardScaler().fit(y_tr)
-    return std_scale.transform(y_tr), std_scale.transform(y_te)
