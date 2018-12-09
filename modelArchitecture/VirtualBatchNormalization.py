@@ -16,7 +16,7 @@ class VirtualBatchNormalization(keras.layers.BatchNormalization):
     def __init__(self, virtual_batch_size=16, *args, **kwargs):
         self.virtual_batch_size = virtual_batch_size
 
-        super(GhostBatchNormalization, self).__init__(*args, **kwargs)
+        super(VirtualBatchNormalization, self).__init__(*args, **kwargs)
 
     def normalize_batch_in_training(self, x, gamma, beta,
                                     reduction_axes, epsilon=1e-3):
@@ -112,6 +112,6 @@ class VirtualBatchNormalization(keras.layers.BatchNormalization):
                                 training=training)
 
     def get_config(self):
-        config = super(GhostBatchNormalization, self).get_config()
-        config.update({'ghost_batch_size': self.ghost_batch_size})
+        config = super(VirtualBatchNormalization, self).get_config()
+        config.update({'virtual_batch_size': self.virtual_batch_size})
         return config
