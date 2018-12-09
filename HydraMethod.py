@@ -31,7 +31,7 @@ class HydraMethod():
         for h in range(nr_heads):
             d["x_{0}".format(h)] = Input(shape=(32,), name="x_{0}".format(h))
             X_input += [d["x_{0}".format(h)]]
-            d["ResnetRnnDense_{0}".format(h)] = self.architecture()
+            d["ResnetRnnDense_{0}".format(h)] = self.architecture
             d["x_{0}".format(h)] = d["ResnetRnnDense_{0}".format(h)].compile(
                                                                     X_input[h])
             X += [d["x_{0}".format(h)]]

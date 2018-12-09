@@ -18,7 +18,12 @@ if __name__ == '__main__':
 
     y_train_std, y_test_std = standardize(y_train, y_test)
 
-    hydra = HydraMethod(ResnetRnnDense, 4)
-    trained_model = hydra.fit(x_train, y_train_std, x_test, y_test_std)
+    batch_size = 256
+
+    hydra = HydraMethod(ResnetRnnDense(virtual_batch_size=int(batch_size / 8)),
+                        4)
+    hydra.compile()
+    trained_model = hydra.fit(x_train, y_train_std, x_test, y_test_std,
+                              batch_size=batch_size)
     save_model(trained_model, "./models/", "one_head_hydra")
     print("-----Finnised-----")

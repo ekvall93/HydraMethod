@@ -1,6 +1,6 @@
 """Markus Ekvall: 2018-12-05."""
 from keras.layers import ZeroPadding1D, Conv1D, Activation, MaxPooling1D, Add
-from .BatchNormalization import BatchNormalization
+from .VirtualBatchNormalization import VirtualBatchNormalization
 
 
 class Resnet():
@@ -8,18 +8,16 @@ class Resnet():
     Credit: Allen Goodman
     https://github.com/broadinstitute/keras-resnet
     """
-    def __init__(self, blocks, features, kernel_size=3, freeze_bn=False,
-                 *args, **kwargs):
+    def __init__(self, blocks, features, kernel_size=3, virtual_batch_size=32):
         """
         :param blocks: Number of ResNet blocks.
         :param features: Features/Filters
         :param kernel_size: kernel/window
-        :param freeze_bn: Freeze the BatchNormalization
         """
         self.blocks = blocks
         self.features = features
-        self.freeze_bn = freeze_bn
         self.kernel_size = kernel_size
+        self.virtual_batch_size = virtual_batch_size
 
     def resnet_block(self, filters, stage=0, block=0, stride=None,
                      numerical_name=False):
@@ -62,20 +60,20 @@ class Resnet():
             y = ZeroPadding1D(padding=1)(x)
             y = Conv1D(filters, self.kernel_size, strides=stride,
                        use_bias=False, **parameters)(y)
-            y = BatchNormalization(axis=1, epsilon=1e-5,
-                                   freeze=self.freeze_bn)(y)
+            y = VirtualBatchNormalization(
+                       virtual_batch_size=self.virtual_batch_size)(y)
             y = Activation("elu")(y)
 
             y = ZeroPadding1D(padding=1)(y)
             y = Conv1D(filters, self.kernel_size, use_bias=False,
                        **parameters)(y)
-            y = BatchNormalization(axis=1, epsilon=1e-5,
-                                   freeze=self.freeze_bn)(y)
+            y = VirtualBatchNormalization(
+                       virtual_batch_size=self.virtual_batch_size)(y)
             if block == 0:
                 shortcut = Conv1D(filters, 1, strides=stride, use_bias=False,
                                   **parameters)(x)
-                shortcut = BatchNormalization(axis=1, epsilon=1e-5,
-                                              freeze=self.freeze_bn)(shortcut)
+                shortcut = VirtualBatchNormalization(
+                          virtual_batch_size=self.virtual_batch_size)(shortcut)
             else:
                 shortcut = x
 
@@ -95,15 +93,17 @@ class Resnet():
 
         x = ZeroPadding1D(padding=3)(x)
         x = Conv1D(64, 7, strides=2, use_bias=False)(x)
-        x = BatchNormalization(axis=1, epsilon=1e-5, freeze=self.freeze_bn)(x)
+        x = VirtualBatchNormalization(
+            virtual_batch_size=self.virtual_batch_size
+        )(x)
         x = Activation("elu")(x)
 
         if init_maxpool:
             x = MaxPooling1D(3, strides=2, padding="same")(x)
         else:
             x = Conv1D(64, 3, strides=2, use_bias=False)(x)
-            x = BatchNormalization(axis=1, epsilon=1e-5,
-                                   freeze=self.freeze_bn)(x)
+            x = VirtualBatchNormalization(
+                virtual_batch_size=self.virtual_batch_size)(x)
             x = Activation("elu")(x)
         for stage_id, iterations in enumerate(self.blocks):
             for block_id in range(iterations):
