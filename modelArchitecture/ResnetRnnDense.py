@@ -8,7 +8,7 @@ from keras.layers import (Embedding, Input, Bidirectional, CuDNNLSTM, Dense,
 class ResnetRnnDense():
     """ResnetRnnDense Architecture"""
     def __init__(self, RnnDrop=0.5, DenseDrop=0.2, ResnetDrop=0.1,
-                 virtual_batch_size=32):
+                 virtual_batch_size=None):
         """
         :param RnnDrop: Droput after RNN.
         :param DenseDrop: Droput after Dense.

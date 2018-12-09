@@ -13,7 +13,7 @@ class VirtualBatchNormalization(keras.layers.BatchNormalization):
     Identical to keras.layers.BatchNormalization, but adds the option to freeze
     parameters.
     """
-    def __init__(self, virtual_batch_size=16, *args, **kwargs):
+    def __init__(self, virtual_batch_size=None, *args, **kwargs):
         self.virtual_batch_size = virtual_batch_size
 
         super(VirtualBatchNormalization, self).__init__(*args, **kwargs)
@@ -26,8 +26,11 @@ class VirtualBatchNormalization(keras.layers.BatchNormalization):
 
     def _regular_normalize_batch_in_training(self, x, gamma, beta,
                                              reduction_axes, epsilon=1e-3):
-        idx = tf.range(self.virtual_batch_size)
-        rinput = tf.gather(x, idx)
+        if self.virtual_batch_size:
+            idx = tf.range(self.virtual_batch_size)
+            rinput = tf.gather(x, idx)
+        else:
+            rinput = x
         mean, var = tf.nn.moments(rinput, reduction_axes,
                                   None, None, False)
         normed = tf.nn.batch_normalization(x, mean, var,

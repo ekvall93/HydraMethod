@@ -8,7 +8,7 @@ class Resnet():
     Credit: Allen Goodman
     https://github.com/broadinstitute/keras-resnet
     """
-    def __init__(self, blocks, features, kernel_size=3, virtual_batch_size=32):
+    def __init__(self, blocks, features, kernel_size=3, virtual_batch_size=None):
         """
         :param blocks: Number of ResNet blocks.
         :param features: Features/Filters
