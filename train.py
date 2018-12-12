@@ -22,8 +22,10 @@ x_test = translater.translate(x_test)
 
 y_train_std, y_test_std = standardize(y_train, y_test)
 
-batch_size = 256
-hydra = HydraMethod(ResnetRnnDense(ResnetDrop=0.3, virtual_batch_size=64), 4)
+batch_size = 128
+hydra = HydraMethod(ResnetRnnDense(blocks=[1, 1, 1, 1], features=32,
+                                   ResnetDrop=0.1, RnnDrop=0.5,DenseDrop=0.1), 4)
+
 
 x_train = hydra.get_all_representation(x_train)
 x_test = hydra.get_all_representation(x_test)
@@ -37,7 +39,7 @@ class LR():
 
     def step_decay(self, epoch):
         initial_lrate = self.lr
-        drop = 0.6
+        drop = 0.5
         epochs_drop = 5.0
         lrate = initial_lrate * math.pow(drop,
                                          math.floor((1+epoch)/epochs_drop))
@@ -71,7 +73,7 @@ def T95(model, x, y):
 
 
 EarlyStopping = keras.callbacks.EarlyStopping(monitor='val_loss',
-                                              min_delta=0, patience=6,
+                                              min_delta=0, patience=3,
                                               verbose=1,
                                               restore_best_weights=True)
 
@@ -110,19 +112,20 @@ else:
     model = hydra.get_model()
 
 
-lr = 5e-4
-model = training(model, x_train, y_train_std, x_test, y_test_std, lr, 256)
+lr = 1e-3
+model = training(model, x_train, y_train_std, x_test, y_test_std, lr,
+                 batch_size)
+
+#lr = eval(model.optimizer.lr) * 0.8
+#model = training(model, x_train, y_train_std, x_test, y_test_std, lr, 256, 6)
 
 lr = eval(model.optimizer.lr) * 0.8
-model = training(model, x_train, y_train_std, x_test, y_test_std, lr, 256, 6)
-
-lr = eval(model.optimizer.lr) * 0.8
-model = training(model, x_train, y_train_std, x_test, y_test_std, lr, 256, 13)
+model = training(model, x_train, y_train_std, x_test, y_test_std, lr, 128, 13)
 
 # serialize model to YAML
 model_yaml = model.to_yaml()
-with open("models/hydra_new.yaml", "w") as yaml_file:
+with open("models/hydra_new_C.yaml", "w") as yaml_file:
     yaml_file.write(model_yaml)
 # serialize weights to HDF5
-model.save_weights("models/hydra_new.h5")
+model.save_weights("models/hydra_new_C.h5")
 print("Saved model to disk")
