@@ -5,8 +5,8 @@ from keras.models import model_from_yaml, model_from_json
 from utils import split_data, translate, save_model, standardize, result
 from HydraMethod import HydraMethod
 import keras
-from keras.callbacks import LearningRateScheduler
-from keras.optimizers import Adam
+from keras.callbacks import LearningRateScheduler, ReduceLROnPlateau
+from keras.optimizers import Adam, SGD
 from keras.losses import mean_absolute_error
 import math
 import numpy as np
@@ -66,17 +66,12 @@ def T95(model, x, y):
     print(np.round(res_train.t95()[0], 4))
 
 
-def T95(model, x, y):
-    predict_train = model.predict([x[0], x[1], x[2], x[3]])
-    res_train = result(y, predict_train)
-    print(np.round(res_train.t95()[0], 4))
-
-
 EarlyStopping = keras.callbacks.EarlyStopping(monitor='val_loss',
                                               min_delta=0, patience=3,
                                               verbose=1,
                                               restore_best_weights=True)
 
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=1e-5)
 
 def training(model, X_train, y_train_std, X_test, y_test_std, lr, bz, k=None):
     if k:
@@ -86,11 +81,11 @@ def training(model, X_train, y_train_std, X_test, y_test_std, lr, bz, k=None):
     lr = LR(lr)
     lrate = LearningRateScheduler(lr.step_decay)
 
-    model.compile(loss=mean_absolute_error, optimizer=Adam(7e-5))
+    model.compile(loss=mean_absolute_error, optimizer=SGD(2e-3, momentum=0.9))
     history = model.fit(X_train, y_train_std, validation_data=(X_test,
                                                                y_test_std),
                         epochs=50, batch_size=bz,
-                        callbacks=[lrate, EarlyStopping])
+                        callbacks=[reduce_lr])
 
     T95(model, X_train, y_train_std)
     T95(model, X_test, y_test_std)
@@ -108,7 +103,7 @@ if load_model:
                                             'Attention': Attention})
     model.load_weights('models/LRF_model.h5')
 else:
-    hydra.compile()
+    hydra.compile(optimizer=SGD(lr=2e-3,momentum=0.9))
     model = hydra.get_model()
 
 
