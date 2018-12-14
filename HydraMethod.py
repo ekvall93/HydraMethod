@@ -1,7 +1,7 @@
 """Markus Ekvall: 2018-12-05."""
 from keras.models import Model
 from keras.losses import mean_absolute_error
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from keras.layers import Input, concatenate, Dense
 from keras.preprocessing.sequence import pad_sequences
 
@@ -108,8 +108,7 @@ class HydraMethod():
             X += [self.get_representation(h, x)]
         return X
 
-    def compile(self, optimizer=Adam, loss=mean_absolute_error,
-                learning_rate=1e-4):
+    def compile(self, optimizer=Adam, loss=mean_absolute_error):
         """
         Compile model.
 
@@ -121,7 +120,7 @@ class HydraMethod():
         if self.new_architecture:
             self.model = self.get_architecture(self.nr_heads)
             self.new_architecture = False
-        self.model.compile(loss=loss, optimizer=optimizer(learning_rate))
+        self.model.compile(loss=loss, optimizer=optimizer)
 
     def get_model(self):
         """

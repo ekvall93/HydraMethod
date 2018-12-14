@@ -1,7 +1,7 @@
 """Markus Ekvall: 2018-12-05."""
 from keras.layers import ZeroPadding1D, Conv1D, Activation, MaxPooling1D, Add
 from .VirtualBatchNormalization import VirtualBatchNormalization
-
+from keras.layers import BatchNormalization
 
 class Resnet():
     """Resnet Architecture
@@ -61,20 +61,23 @@ class Resnet():
             y = ZeroPadding1D(padding=1)(x)
             y = Conv1D(filters, self.kernel_size, strides=stride,
                        use_bias=False, **parameters)(y)
-            y = VirtualBatchNormalization(
-                       virtual_batch_size=self.virtual_batch_size)(y)
+            #y = VirtualBatchNormalization(
+            #           virtual_batch_size=self.virtual_batch_size)(y)
+            y = BatchNormalization()(y)
             y = Activation("elu")(y)
 
             y = ZeroPadding1D(padding=1)(y)
             y = Conv1D(filters, self.kernel_size, use_bias=False,
                        **parameters)(y)
-            y = VirtualBatchNormalization(
-                       virtual_batch_size=self.virtual_batch_size)(y)
+            #y = VirtualBatchNormalization(
+            #           virtual_batch_size=self.virtual_batch_size)(y)
+            y = BatchNormalization()(y)
             if block == 0:
                 shortcut = Conv1D(filters, 1, strides=stride, use_bias=False,
                                   **parameters)(x)
-                shortcut = VirtualBatchNormalization(
-                          virtual_batch_size=self.virtual_batch_size)(shortcut)
+                #shortcut = VirtualBatchNormalization(
+                #          virtual_batch_size=self.virtual_batch_size)(shortcut)
+                shortcut = BatchNormalization()(shortcut)
             else:
                 shortcut = x
 
@@ -94,17 +97,19 @@ class Resnet():
 
         x = ZeroPadding1D(padding=3)(x)
         x = Conv1D(64, 7, strides=2, use_bias=False)(x)
-        x = VirtualBatchNormalization(
-            virtual_batch_size=self.virtual_batch_size
-        )(x)
+        #x = VirtualBatchNormalization(
+        #    virtual_batch_size=self.virtual_batch_size
+        #)(x)
+        x = BatchNormalization()(x)
         x = Activation("elu")(x)
 
         if init_maxpool:
             x = MaxPooling1D(3, strides=2, padding="same")(x)
         else:
             x = Conv1D(64, 3, strides=2, use_bias=False)(x)
-            x = VirtualBatchNormalization(
-                virtual_batch_size=self.virtual_batch_size)(x)
+            #x = VirtualBatchNormalization(
+            #    virtual_batch_size=self.virtual_batch_size)(x)
+            x = BatchNormalization()(x)
             x = Activation("elu")(x)
         for stage_id, iterations in enumerate(self.blocks):
             for block_id in range(iterations):

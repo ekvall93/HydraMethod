@@ -23,7 +23,7 @@ x_test = translater.translate(x_test)
 y_train_std, y_test_std = standardize(y_train, y_test)
 
 batch_size = 128
-hydra = HydraMethod(ResnetRnnDense(blocks=[1, 1, 1, 1], features=32,
+hydra = HydraMethod(ResnetRnnDense(blocks= [1, 1, 1, 1], features=32,
                                    ResnetDrop=0.1, RnnDrop=0.5,DenseDrop=0.1), 4)
 
 
@@ -39,7 +39,7 @@ class LR():
 
     def step_decay(self, epoch):
         initial_lrate = self.lr
-        drop = 0.5
+        drop = 0.9
         epochs_drop = 5.0
         lrate = initial_lrate * math.pow(drop,
                                          math.floor((1+epoch)/epochs_drop))
@@ -112,7 +112,7 @@ else:
     model = hydra.get_model()
 
 
-lr = 1e-3
+lr = 1e-4
 model = training(model, x_train, y_train_std, x_test, y_test_std, lr,
                  batch_size)
 
@@ -120,7 +120,8 @@ model = training(model, x_train, y_train_std, x_test, y_test_std, lr,
 #model = training(model, x_train, y_train_std, x_test, y_test_std, lr, 256, 6)
 
 lr = eval(model.optimizer.lr) * 0.8
-model = training(model, x_train, y_train_std, x_test, y_test_std, lr, 128, 13)
+model = training(model, x_train, y_train_std, x_test, y_test_std, lr,
+                 batch_size, 13)
 
 # serialize model to YAML
 model_yaml = model.to_yaml()
