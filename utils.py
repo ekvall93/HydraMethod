@@ -179,7 +179,8 @@ class split_data():
                     test_set['irt'].values.reshape((-1, 1)))
         else:
 
-            train_ix = ix[:int(len(ix)*self.train_size)]
+            #train_ix = ix[:int(len(ix)*self.train_size)]
+            train_ix = ix
             train_ix = unique_seq[train_ix].tolist()
             print(len(train_ix))
             train_set = self.get_datasets(new_df, train_ix)

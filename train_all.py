@@ -13,14 +13,14 @@ import numpy as np
 from keras.backend import eval
 
 PATH = "./data/"
-splitter = split_data(PATH + "raw.csv", PATH, test_size=0.1, train_size=0.9)
-x_train, y_train, x_test, y_test = splitter.split()
+splitter = split_data(PATH + "raw.csv", PATH, train_size=0.99)
+x_train, y_train= splitter.split()
 translater = translate()
 
 x_train = translater.translate(x_train)
-x_test = translater.translate(x_test)
 
-y_train_std, y_test_std = standardize(y_train, y_test)
+
+y_train_std = standardize(y_train)
 
 batch_size = 128
 hydra = HydraMethod(ResnetRnnDense(blocks= [1, 1, 1, 1], features=32,
@@ -28,7 +28,7 @@ hydra = HydraMethod(ResnetRnnDense(blocks= [1, 1, 1, 1], features=32,
 
 
 x_train = hydra.get_all_representation(x_train)
-x_test = hydra.get_all_representation(x_test)
+
 
 load_model = False
 
@@ -73,7 +73,7 @@ EarlyStopping = keras.callbacks.EarlyStopping(monitor='val_loss',
 
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.8, patience=5, min_lr=1e-5)
 
-def training(model, X_train, y_train_std, X_test, y_test_std, lr, bz, k=None):
+def training(model, X_train, y_train_std, lr, bz, epoch, k=None):
     if k:
         print("not none")
         model = freeze_it(model, k)
@@ -82,13 +82,11 @@ def training(model, X_train, y_train_std, X_test, y_test_std, lr, bz, k=None):
     lrate = LearningRateScheduler(lr.step_decay)
 
     model.compile(loss=mean_absolute_error, optimizer=Adam(2e-3))
-    history = model.fit(X_train, y_train_std, validation_data=(X_test,
-                                                               y_test_std),
+    history = model.fit(X_train, y_train_std,
                         epochs=epoch, batch_size=bz,
-                        callbacks=[lrate, EarlyStopping])
+                        callbacks=[lrate])
 
     T95(model, X_train, y_train_std)
-    T95(model, X_test, y_test_std)
     return model
 
 
@@ -108,21 +106,14 @@ else:
 
 
 lr = 2e-3
-model = training(model, x_train, y_train_std, x_test, y_test_std, lr,
-                 batch_size, epoch)
+model = training(model, x_train, y_train_std, lr,
+                 batch_size, 42)
 
-
-#lr = eval(model.optimizer.lr) * 0.8
-#model = training(model, x_train, y_train_std, x_test, y_test_std, lr, 256, 6)
-
-lr = eval(model.optimizer.lr) * 0.8
-model = training(model, x_train, y_train_std, x_test, y_test_std, lr,
-                 batch_size, 13)
 
 # serialize model to YAML
 model_yaml = model.to_yaml()
-with open("models/hydra_new_C.yaml", "w") as yaml_file:
+with open("models/all_data.yaml", "w") as yaml_file:
     yaml_file.write(model_yaml)
 # serialize weights to HDF5
-model.save_weights("models/hydra_new_C.h5")
+model.save_weights("models/all_data.h5")
 print("Saved model to disk")
