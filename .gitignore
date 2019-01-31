@@ -1,3 +1,5 @@
 git_ignore.sh
 delta_t_pred.ipynb
-train.py
+train_x.py
+train_all_x.py
+LOAD_data_x.ipynb
